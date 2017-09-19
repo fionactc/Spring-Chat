@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Spring Chat Demo</title>
+    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/sockjs-client/sockjs.min.js"></script>
+    <script src="/webjars/stomp-websocket/stomp.min.js"></script>
+    <link href="app.css" rel="stylesheet" />
+    <script>
+       $(document).ready(function($) {
+           var name;
+           var stompClient;
+           var socket = new SockJS('/gs-guide-websocket');
+           stompClient = Stomp.over(socket);
+           stompClient.connect({}, function(frame) {
+               stompClient.subscribe('/topic/greetings', function(greeting) {
+                   showMsg(JSON.parse(greeting.body));
+               })
+           }, function(){
+               reconnect();
+           });
+
+           function reconnect() {
+               var connected = false;
+               var reconInv  = setInterval(function() {
+                   socket = new SockJS('/gs-guide-websocket');
+                   stompClient = Stomp.over(socket);
+                   stompClient.connect({}, function(frame) {
+                       clearInterval(reconInv);
+                       connected = true;
+                       stompClient.subscribe('/topic/greetings', function(greeting) {
+                           showMsg(JSON.parse(greeting.body));
+                       })
+                   }, function() {
+                      if (connected) {
+                          reconnect();
+                      }
+                   })
+               }, 1000)
+           }
+
+           $.ajax({
+               url: '/messages',
+               method: 'GET'
+           }).done(function(data) {
+               if (data && data.length) {
+                  data.forEach((msg)=>{
+                      showMsg(msg);
+                  })
+
+               }
+           })
+
+           $.ajax({
+               url: '/user',
+               method: 'GET'
+           }).done(function(data) {
+               if (data) {
+                   name = data.userAuthentication.details.name;
+                   $("#content").addClass("visible").removeClass("hidden");
+                   $("#content-disabled").removeClass("visible").addClass("hidden");
+                   $("#send").removeClass("disabled");
+                   $("#login-btn").removeClass("visible").addClass("hidden");
+                   $("#logged-in")
+                       .addClass("visible")
+                       .removeClass("hidden")
+                       .text("Welcome, " + name);
+                   $("#logout-btn").addClass("visible").removeClass("hidden");
+               }
+           });
+
+           $("form").on("submit", function(e) {
+               e.preventDefault();
+           });
+           $("#send").click(function() {
+               var result = {
+                   'senderName': name,
+                   'content': $("#content").val()
+               };
+               stompClient.send("/app/hello", {}, JSON.stringify(result))
+               $("#content").val("");
+           })
+
+           $("#logout-btn").click(function() {
+               $.ajax({
+                   url: '/logout',
+                   method: 'POST'
+               }).done(function() {
+                   name = null;
+                   $("#content").removeClass("visible").addClass("hidden");
+                   $("#content-disabled").addClass("visible").removeClass("hidden");
+                   $("#send").addClass("disabled");
+
+                   $("#login-btn").addClass("visible").removeClass("hidden");
+                   $("#logged-in").addClass("hidden").removeClass("visible");
+                   $("#logout-btn").addClass("hidden").removeClass("visible");
+               }).fail(function(err) {
+                   console.log(err);
+               })
+           });
+
+           function showMsg(msg) {
+              $("#chat-container").append(
+                  "<div class='row chat-msg-row'>" +
+                      "<div class='col-xs-3' style='font-weight: bold; color: lightseagreen;'>" + msg.senderName + ":</div>" +
+                      "<div class='col-xs-9'>" + msg.content + "</div>" +
+                  "</div>"
+              );
+               // scroll to bottom
+               var target = document.getElementById("chat-container");
+              target.scrollTop = target.scrollHeight - target.clientHeight;
+           }
+       })
+    </script>
+</head>
+<body>
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a href="#" class="navbar-brand">Java Chat Room</a>
+        </div>
+        <a href="/login"
+           id="login-btn"
+           class="btn btn-info navbar-btn navbar-right">Login with Facebook</a>
+        <a href="#"
+           id="logout-btn"
+           class="hidden btn btn-warning navbar-btn navbar-right">Logout</a>
+        <p id="logged-in" class="hidden navbar-text navbar-right"></p>
+    </div>
+</nav>
+<div id="chat-container">
+</div>
+<nav class="navbar navbar-default navbar-fixed-bottom">
+    <form class="navbar-form navbar-left message-form">
+        <div class="row">
+            <div class="form-group col-xs-11">
+                <input type="text" class="form-control hidden" id="content" placeholder="Type your message here" />
+                <input type="text" class="form-control" id="content-disabled" placeholder="Please log in to send message" disabled="disabled" />
+            </div>
+            <button class="btn btn-default col-xs-1 disabled" type="submit" id="send">
+                <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
+            </button>
+        </div>
+    </form>
+</nav>
+</body>
+</html>

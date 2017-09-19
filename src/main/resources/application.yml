@@ -1,0 +1,43 @@
+security:
+  oauth2:
+    client:
+      clientId: 233668646673605
+      clientSecret: 33b17e044ee6a4fa383f46ec6e28ea1d
+      accessTokenUri: https://graph.facebook.com/oauth/access_token
+      userAuthorizationUri: https://www.facebook.com/dialog/oauth
+      tokenName: oauth_token
+      authenticationScheme: query
+      clientAuthenticationScheme: form
+    resource:
+      userInfoUri: https://graph.facebook.com/me
+logging:
+    level:
+        org:
+            hibernate:
+                SQL: DEBUG
+                type:
+                    descriptor:
+                        sql:
+                            BasicBinder: TRACE
+spring:
+    datasource:
+        password: webstudent
+        tomcat:
+            max-active: 50
+            max-idle: 20
+            max-wait: 20000
+            min-idle: 15
+        url: jdbc:mysql://localhost:3306/spring_chat
+        username: webstudent
+    jpa:
+        hibernate:
+            naming:
+              physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.MySQLDialect
+                format_sql: true
+                id:
+                    new_generator_mappings: false
+
+...

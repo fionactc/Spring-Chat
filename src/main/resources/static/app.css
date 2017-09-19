@@ -1,0 +1,47 @@
+html, body {
+    height: 100%;
+}
+body {
+    overflow: hidden;
+    padding: 50px 20px;
+}
+
+.visible {
+    visibility: visible;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+#logout-btn {
+    margin-left: 20px;
+}
+
+.navbar-fixed-bottom {
+    padding: 10px 20px;
+}
+
+#chat-container {
+    font-size: 1.3em;
+    height: 100%;
+    overflow: scroll;
+}
+
+.chat-msg-row {
+    padding: 5px 0;
+}
+
+#chat-container:first-child {
+    padding-top: 10px;
+}
+
+
+.message-form {
+    width: 100%;
+}
+
+#content, #content-disabled {
+    width: 100%;
+}
+
